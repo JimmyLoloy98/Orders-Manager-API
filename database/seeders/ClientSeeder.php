@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Client;
 use App\Models\Company;
-use App\Models\Origin;
 use Illuminate\Database\Seeder;
 
 class ClientSeeder extends Seeder
@@ -17,9 +16,7 @@ class ClientSeeder extends Seeder
         $companies = Company::all();
 
         foreach ($companies as $company) {
-            $origins = Origin::where('company_id', $company->id)->pluck('name')->toArray();
-
-            for ($i = 1; $i <= 5; $i++) {
+            for ($i = 1; $i <= 2; $i++) {
                 Client::create([
                     'company_id' => $company->id,
                     'username' => "user{$i}_company{$company->id}",

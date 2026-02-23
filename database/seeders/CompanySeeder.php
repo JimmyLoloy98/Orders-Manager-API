@@ -13,11 +13,8 @@ class CompanySeeder extends Seeder
     public function run(): void
     {
         $companies = [
-            ['name' => 'Metro Scrap Solutions'],
-            ['name' => 'Reciclajes Industriales S.A.'],
-            ['name' => 'EcoMetales del Norte'],
-            ['name' => 'Global Recycling Group'],
-            ['name' => 'Chatarra Express S.A.C.'],
+            ['name' => 'Recreo Panchito Falcon'],
+            ['name' => 'Monteprado Club Campestre'],
         ];
 
         foreach ($companies as $company) {
