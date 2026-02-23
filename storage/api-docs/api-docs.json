@@ -107,15 +107,6 @@
                             "type": "integer",
                             "default": 10
                         }
-                    },
-                    {
-                        "name": "origin",
-                        "in": "query",
-                        "description": "Filtrar por lugar de procedencia",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
                     }
                 ],
                 "responses": {
@@ -282,15 +273,6 @@
                         "schema": {
                             "type": "string",
                             "format": "date"
-                        }
-                    },
-                    {
-                        "name": "scrapId",
-                        "in": "query",
-                        "description": "ID de chatarra opcional",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
                         }
                     }
                 ],

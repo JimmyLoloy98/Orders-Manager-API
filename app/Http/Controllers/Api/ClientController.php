@@ -22,18 +22,12 @@ class ClientController extends Controller
         [
             new \OpenApi\Attributes\Parameter(name: "page", in: "query", required: false, schema: new \OpenApi\Attributes\Schema(type: "integer", default: 1), description: "Número de página"),
             new \OpenApi\Attributes\Parameter(name: "limit", in: "query", required: false, schema: new \OpenApi\Attributes\Schema(type: "integer", default: 10), description: "Registros por página"),
-            new \OpenApi\Attributes\Parameter(name: "origin", in: "query", required: false, schema: new \OpenApi\Attributes\Schema(type: "string"), description: "Filtrar por lugar de procedencia"),
         ]
     )]
     public function index(Request $request)
     {
         $companyId = $request->user()->company_id;
         $query = Client::where('company_id', $companyId);
-
-        // Filter by origin
-        if ($request->has('origin')) {
-            $query->where('origin', $request->query('origin'));
-        }
 
         $page = $request->query('page', 1);
         $limit = $request->query('limit', 10);

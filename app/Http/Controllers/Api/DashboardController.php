@@ -167,7 +167,6 @@ class DashboardController extends Controller
         [
             new \OpenApi\Attributes\Parameter(name: "startDate", in: "query", required: true, schema: new \OpenApi\Attributes\Schema(type: "string", format: "date"), description: "Fecha inicio (YYYY-MM-DD)"),
             new \OpenApi\Attributes\Parameter(name: "endDate", in: "query", required: true, schema: new \OpenApi\Attributes\Schema(type: "string", format: "date"), description: "Fecha fin (YYYY-MM-DD)"),
-            new \OpenApi\Attributes\Parameter(name: "scrapId", in: "query", required: false, schema: new \OpenApi\Attributes\Schema(type: "string"), description: "ID de chatarra opcional"),
         ]
     )]
     public function scrapCollection(Request $request)
@@ -175,29 +174,22 @@ class DashboardController extends Controller
         $request->validate([
             'startDate' => 'required|date',
             'endDate' => 'required|date',
-            'scrapId' => 'nullable|exists:scraps,id',
         ]);
 
         $companyId = $request->user()->company_id;
         $startDate = $request->query('startDate');
         $endDate = $request->query('endDate');
-        $scrapId = $request->query('scrapId');
 
         $query = PaymentItem::whereHas('payment', function ($q) use ($companyId, $startDate, $endDate) {
             $q->where('company_id', $companyId)
                 ->whereBetween('date', [$startDate, $endDate]);
         })->with('scrap:id,name,unit_measure');
 
-        if ($scrapId) {
-            $query->where('scrap_id', $scrapId);
-        }
-
         $stats = $query->select('scrap_id', DB::raw('SUM(quantity) as total_quantity'))
             ->groupBy('scrap_id')
             ->get()
             ->map(function ($item) {
                 return [
-                    'scrapId' => $item->scrap_id,
                     'scrapName' => $item->scrap?->name ?? 'N/A',
                     'unitMeasure' => $item->scrap?->unit_measure ?? 'N/A',
                     'totalQuantity' => (float) $item->total_quantity,
