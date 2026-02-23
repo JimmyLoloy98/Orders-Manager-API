@@ -1,0 +1,69 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Attributes\OpenApi\Post;
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use OpenApi\Attributes as OA;
+
+class AuthController extends Controller
+{
+    #[Post("/auth/login", "Iniciar sesión en la aplicación", "Authentication", false, new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["username", "password"],
+            properties: [
+                new OA\Property(property: "username", type: "string", format: "username", example: "username"),
+                new OA\Property(property: "password", type: "string", format: "password", example: "password"),
+            ]
+        )
+    ))]
+    public function login(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string',
+            'password' => 'required',
+        ]);
+
+        $user = User::where('username', $request->username)->first();
+
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'username' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'name' => $user->name,
+                'companyId' => $user->company_id,
+                'company' => $user->company ? [
+                    'id' => $user->company->id,
+                    'name' => $user->company->name,
+                    'createdAt' => $user->company->created_at->toISOString(),
+                ] : null,
+                'avatar' => $user->avatar,
+            ],
+            'token' => $token,
+        ]);
+    }
+
+    #[Post("/auth/logout", "Cerrar sesión", "Authentication")]
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'Logged out successfully',
+        ]);
+    }
+}
