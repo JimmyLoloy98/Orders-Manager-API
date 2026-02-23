@@ -23,24 +23,4 @@ class Company extends Model
     {
         return $this->hasMany(Client::class);
     }
-
-    public function credits(): HasMany
-    {
-        return $this->hasMany(Credit::class);
-    }
-
-    public function payments(): HasMany
-    {
-        return $this->hasMany(Payment::class);
-    }
-
-    public function scraps(): HasMany
-    {
-        return $this->hasMany(Scrap::class);
-    }
-
-    public function origins(): HasMany
-    {
-        return $this->hasMany(Origin::class);
-    }
 }

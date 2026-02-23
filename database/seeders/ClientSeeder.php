@@ -22,15 +22,7 @@ class ClientSeeder extends Seeder
             for ($i = 1; $i <= 5; $i++) {
                 Client::create([
                     'company_id' => $company->id,
-                    'owner_name' => "Dueño $i",
-                    'dni' => "DNI$i" . rand(1000, 9999),
-                    'ruc' => "RUC$i" . rand(10000, 99999),
-                    'business_name' => "Negocio $i " . $company->name,
-                    'phone' => "999-555-00$i",
-                    'email' => "cliente$i@example.com",
-                    'address' => "Calle Falsa $i, Ciudad " . $company->id,
-                    'origin' => $origins[array_rand($origins)],
-                    'notes' => "Cliente frecuente $i",
+                    'username' => "user{$i}_company{$company->id}",
                     'current_debt' => rand(100, 5000),
                 ]);
             }

@@ -10,8 +10,7 @@ if (!defined('L5_SWAGGER_CONST_HOST')) {
 
 #[OA\Info(
     version: "1.0.0",
-    title: "Scrap Payments Manager API",
-    description: "API documentation for Scrap Payments Manager application"
+    title: "Orders Manager API",
 )]
 #[OA\Server(
     url: L5_SWAGGER_CONST_HOST . "api/v1",
@@ -28,10 +27,6 @@ if (!defined('L5_SWAGGER_CONST_HOST')) {
 #[OA\Tag(name: "Authentication", description: "Authentication endpoints")]
 #[OA\Tag(name: "Dashboard", description: "Dashboard statistics and overview")]
 #[OA\Tag(name: "Clients", description: "Client management")]
-#[OA\Tag(name: "Credits", description: "Credit management")]
-#[OA\Tag(name: "Payments", description: "Payment management")]
-#[OA\Tag(name: "Scraps", description: "Scrap types management")]
-#[OA\Tag(name: "Origins", description: "Origin locations management")]
 class OpenApi
 {
 }
