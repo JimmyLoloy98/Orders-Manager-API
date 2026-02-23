@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use OpenApi\Attributes as OA;
 
@@ -25,36 +26,53 @@ class AuthController extends Controller
     ))]
     public function login(Request $request)
     {
-        $request->validate([
-            'username' => 'required|string',
-            'password' => 'required',
-        ]);
-
-        $user = User::where('username', $request->username)->first();
-
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'username' => ['The provided credentials are incorrect.'],
+        try {
+            $request->validate([
+                'username' => 'required|string',
+                'password' => 'required',
             ]);
+
+            $user = User::where('username', $request->username)
+                ->with('company')
+                ->first();
+
+            if (! $user || ! Hash::check($request->password, $user->password)) {
+                throw ValidationException::withMessages([
+                    'username' => ['Las credenciales proporcionadas son incorrectas.'],
+                ]);
+            }
+
+            $token = $user->createToken('auth-token')->plainTextToken;
+
+            return response()->json([
+                'user' => [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                    'name' => $user->name,
+                    'companyId' => $user->company_id,
+                    'company' => $user->company ? [
+                        'id' => $user->company->id,
+                        'name' => $user->company->name,
+                        'createdAt' => $user->company->created_at->toISOString(),
+                    ] : null,
+                    'avatar' => $user->avatar,
+                ],
+                'token' => $token,
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Login error: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+
+            if ($e instanceof ValidationException) {
+                throw $e;
+            }
+
+            return response()->json([
+                'message' => 'Error al iniciar sesión. Por favor, intenta de nuevo.',
+                'error' => app()->environment('local') ? $e->getMessage() : null,
+            ], 500);
         }
-
-        $token = $user->createToken('auth-token')->plainTextToken;
-
-        return response()->json([
-            'user' => [
-                'id' => $user->id,
-                'username' => $user->username,
-                'name' => $user->name,
-                'companyId' => $user->company_id,
-                'company' => $user->company ? [
-                    'id' => $user->company->id,
-                    'name' => $user->company->name,
-                    'createdAt' => $user->company->created_at->toISOString(),
-                ] : null,
-                'avatar' => $user->avatar,
-            ],
-            'token' => $token,
-        ]);
     }
 
     #[Post("/auth/logout", "Cerrar sesión", "Authentication")]

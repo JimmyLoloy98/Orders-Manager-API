@@ -4,12 +4,16 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\CreditController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\OriginController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ScrapController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+    // Health check (no auth required)
+    Route::get('/health', [HealthController::class, 'check']);
+
     // Authentication routes (no auth required)
     Route::post('/auth/login', [AuthController::class, 'login']);
 
