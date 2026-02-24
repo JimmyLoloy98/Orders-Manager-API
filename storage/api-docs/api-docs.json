@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Orders Manager API",
+        "title": "Pedidos Panchito API",
         "version": "1.0.0"
     },
     "servers": [
@@ -80,83 +80,6 @@
                 ]
             }
         },
-        "/clients": {
-            "get": {
-                "tags": [
-                    "Clients"
-                ],
-                "summary": "Listar todos los clientes",
-                "operationId": "6536f8d22d25758c3e14dbbe8e228af0",
-                "parameters": [
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Número de página",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "default": 1
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "description": "Registros por página",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "default": 10
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Operación exitosa"
-                    },
-                    "401": {
-                        "description": "No autenticado"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/clients/{id}": {
-            "get": {
-                "tags": [
-                    "Clients"
-                ],
-                "summary": "Obtener detalles de un cliente específico",
-                "operationId": "1837c830668b0f7aa87761172e9a8cf9",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID del cliente",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Operación exitosa"
-                    },
-                    "401": {
-                        "description": "No autenticado"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/dashboard/stats": {
             "get": {
                 "tags": [
@@ -184,13 +107,12 @@
                 "tags": [
                     "Dashboard"
                 ],
-                "summary": "Obtener actividad reciente (créditos y pagos)",
+                "summary": "Obtener actividad reciente",
                 "operationId": "dcbdaa7960b57a1404fb0adddc9e7302",
                 "parameters": [
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Número de registros a retornar",
                         "required": false,
                         "schema": {
                             "type": "integer",
@@ -218,13 +140,12 @@
                 "tags": [
                     "Dashboard"
                 ],
-                "summary": "Obtener datos para el gráfico de resumen mensual",
+                "summary": "Resumen mensual para gráficas",
                 "operationId": "595842cfb0738db2465642487fa61ec4",
                 "parameters": [
                     {
                         "name": "months",
                         "in": "query",
-                        "description": "Número de meses a retornar",
                         "required": false,
                         "schema": {
                             "type": "integer",
@@ -247,32 +168,43 @@
                 ]
             }
         },
-        "/dashboard/scrap-collection": {
+        "/tables": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Mesas"
                 ],
-                "summary": "Estadísticas de recolección de chatarra por periodo",
-                "operationId": "a7135fe3e9954ed39f1b61c5b3078253",
+                "summary": "Listar mesas y su estado",
+                "operationId": "b8930307a064b11ff277b4fd64cadd7d",
                 "parameters": [
                     {
-                        "name": "startDate",
+                        "name": "status",
                         "in": "query",
-                        "description": "Fecha inicio (YYYY-MM-DD)",
-                        "required": true,
+                        "description": "Filtrar por estado",
+                        "required": false,
                         "schema": {
                             "type": "string",
-                            "format": "date"
+                            "enum": [
+                                "free",
+                                "busy"
+                            ]
                         }
                     },
                     {
-                        "name": "endDate",
+                        "name": "limit",
                         "in": "query",
-                        "description": "Fecha fin (YYYY-MM-DD)",
-                        "required": true,
+                        "required": false,
                         "schema": {
-                            "type": "string",
-                            "format": "date"
+                            "type": "integer",
+                            "default": 50
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
                         }
                     }
                 ],
@@ -282,6 +214,479 @@
                     },
                     "401": {
                         "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Mesas"
+                ],
+                "summary": "Crear una mesa",
+                "operationId": "f5b3a5cf8015bee5f526534e49a01086",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "M3"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Recurso creado exitosamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/tables/{tableId}": {
+            "get": {
+                "tags": [
+                    "Mesas"
+                ],
+                "summary": "Obtener detalles de una mesa",
+                "operationId": "43cb670aabec428943a16e21681f238e",
+                "parameters": [
+                    {
+                        "name": "tableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/menu/items": {
+            "get": {
+                "tags": [
+                    "Menú"
+                ],
+                "summary": "Listar items del menú",
+                "operationId": "287ae0e2cb2005ce026340aafedbe685",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Filtrar por nombre de categoría",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Búsqueda por nombre",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Menú"
+                ],
+                "summary": "Crear item del menú",
+                "operationId": "c4506b52f6e7049a2ae826e26b79a7cb",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "categoryId",
+                                    "price"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "categoryId": {
+                                        "type": "integer"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Recurso creado exitosamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/menu/items/{itemId}": {
+            "put": {
+                "tags": [
+                    "Menú"
+                ],
+                "summary": "Actualizar item del menú",
+                "operationId": "6749d51b20185fdf2c0d5b1704d1b810",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Recurso actualizado exitosamente"
+                    },
+                    "404": {
+                        "description": "Recurso no encontrado"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/menu/categories": {
+            "get": {
+                "tags": [
+                    "Menú"
+                ],
+                "summary": "Listar categorías del menú",
+                "operationId": "42daf2a80fe91ac314a97dbab1d683d4",
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Menú"
+                ],
+                "summary": "Crear categoría del menú",
+                "operationId": "f2408acab4a5c9dac70e2a2573cebe91",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Recurso creado exitosamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/orders": {
+            "post": {
+                "tags": [
+                    "Pedidos"
+                ],
+                "summary": "Crear pedido para una mesa",
+                "operationId": "b6490f9d9026dbe871b41207e118fffb",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "tableId",
+                                    "items"
+                                ],
+                                "properties": {
+                                    "tableId": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "menuItemId": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "quantity": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Recurso creado exitosamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/tables/{tableId}/orders": {
+            "get": {
+                "tags": [
+                    "Pedidos"
+                ],
+                "summary": "Listar pedidos de una mesa",
+                "operationId": "97f0f51cbbeeac80f0ab866ca8ec5562",
+                "parameters": [
+                    {
+                        "name": "tableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/orders/{orderId}": {
+            "get": {
+                "tags": [
+                    "Pedidos"
+                ],
+                "summary": "Obtener detalles de un pedido",
+                "operationId": "83b7de3b431e8a0b0c2fc7ffd70976ec",
+                "parameters": [
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Pedidos"
+                ],
+                "summary": "Actualizar un pedido",
+                "operationId": "162105cf082e30c5c7db61c1ed91a95a",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "menuItemId": {
+                                                    "type": "integer"
+                                                },
+                                                "quantity": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Recurso actualizado exitosamente"
+                    },
+                    "404": {
+                        "description": "Recurso no encontrado"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/orders/{orderId}/pay": {
+            "post": {
+                "tags": [
+                    "Pedidos"
+                ],
+                "summary": "Marcar pedido como pagado",
+                "operationId": "71414da77d1d9c8b7ea764f344e1b6f9",
+                "responses": {
+                    "201": {
+                        "description": "Recurso creado exitosamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
                     }
                 },
                 "security": [
@@ -312,8 +717,16 @@
             "description": "Dashboard statistics and overview"
         },
         {
-            "name": "Clients",
-            "description": "Client management"
+            "name": "Mesas",
+            "description": "Gestión de mesas"
+        },
+        {
+            "name": "Pedidos",
+            "description": "Gestión de pedidos por mesa"
+        },
+        {
+            "name": "Menú",
+            "description": "Gestión de platos y bebidas"
         }
     ]
 }

@@ -18,22 +18,32 @@ class DiningTableController extends Controller
     ])]
     public function index(Request $request)
     {
-        $companyId = $request->user()->company_id;
         $status = $request->query('status');
         $limit = $request->query('limit', 50);
 
-        $query = DiningTable::where('company_id', $companyId);
+        $query = DiningTable::query();
 
         if ($status) {
             $query->where('status', $status);
         }
 
-        $tables = $query->paginate($limit);
+        $tables = $query->with('activeOrders')->paginate($limit);
+
+        $formattedTables = collect($tables->items())->map(function ($table) {
+            return [
+                'id' => $table->id,
+                'name' => $table->name,
+                'status' => $table->status,
+                'totalAmount' => (float) $table->activeOrders->sum('total_amount'),
+                'createdAt' => $table->created_at,
+                'updatedAt' => $table->updated_at,
+            ];
+        });
 
         return response()->json([
             'success' => true,
             'data' => [
-                'tables' => $tables->items(),
+                'tables' => $formattedTables,
                 'pagination' => [
                     'total' => $tables->total(),
                     'page' => $tables->currentPage(),
@@ -41,6 +51,7 @@ class DiningTableController extends Controller
                 ]
             ]
         ]);
+
     }
 
     #[Get("/tables/{tableId}", "Obtener detalles de una mesa", "Mesas", true, [
@@ -48,8 +59,7 @@ class DiningTableController extends Controller
     ])]
     public function show(Request $request, $id)
     {
-        $companyId = $request->user()->company_id;
-        $table = DiningTable::where('company_id', $companyId)->find($id);
+        $table = DiningTable::find($id);
 
         if (!$table) {
             return response()->json([
@@ -103,10 +113,7 @@ class DiningTableController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $companyId = $request->user()->company_id;
-
         $table = DiningTable::create([
-            'company_id' => $companyId,
             'name' => $request->name,
             'status' => 'free',
         ]);

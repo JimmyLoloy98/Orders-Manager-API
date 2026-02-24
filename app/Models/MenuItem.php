@@ -11,24 +11,16 @@ class MenuItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'company_id',
         'menu_category_id',
         'name',
         'description',
         'price',
         'image',
-        'available',
     ];
 
     protected $casts = [
         'price' => 'float',
-        'available' => 'boolean',
     ];
-
-    public function company(): BelongsTo
-    {
-        return $this->belongsTo(Company::class);
-    }
 
     public function category(): BelongsTo
     {

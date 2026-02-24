@@ -39,13 +39,10 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        $companyId = $request->user()->company_id;
-
-        return DB::transaction(function () use ($request, $companyId) {
-            $table = DiningTable::where('company_id', $companyId)->findOrFail($request->tableId);
+        return DB::transaction(function () use ($request) {
+            $table = DiningTable::findOrFail($request->tableId);
 
             $order = Order::create([
-                'company_id' => $companyId,
                 'dining_table_id' => $table->id,
                 'status' => 'pending',
                 'total_amount' => 0,
@@ -54,7 +51,7 @@ class OrderController extends Controller
             $totalAmount = 0;
 
             foreach ($request->items as $itemData) {
-                $menuItem = MenuItem::where('company_id', $companyId)->findOrFail($itemData['menuItemId']);
+                $menuItem = MenuItem::findOrFail($itemData['menuItemId']);
                 $subtotal = $menuItem->price * $itemData['quantity'];
 
                 OrderItem::create([
@@ -88,8 +85,7 @@ class OrderController extends Controller
     ])]
     public function indexByTable(Request $request, $tableId)
     {
-        $companyId = $request->user()->company_id;
-        $table = DiningTable::where('company_id', $companyId)->findOrFail($tableId);
+        $table = DiningTable::findOrFail($tableId);
 
         $orders = Order::where('dining_table_id', $table->id)
             ->with('items.menuItem')
@@ -110,10 +106,7 @@ class OrderController extends Controller
     ])]
     public function show(Request $request, $id)
     {
-        $companyId = $request->user()->company_id;
-        $order = Order::where('company_id', $companyId)
-            ->with('items.menuItem')
-            ->findOrFail($id);
+        $order = Order::with('items.menuItem')->findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -141,10 +134,8 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        $companyId = $request->user()->company_id;
-
-        return DB::transaction(function () use ($request, $companyId, $id) {
-            $order = Order::where('company_id', $companyId)->findOrFail($id);
+        return DB::transaction(function () use ($request, $id) {
+            $order = Order::findOrFail($id);
 
             if ($order->status !== 'pending') {
                 return response()->json([
@@ -158,7 +149,7 @@ class OrderController extends Controller
 
             $totalAmount = 0;
             foreach ($request->items as $itemData) {
-                $menuItem = MenuItem::where('company_id', $companyId)->findOrFail($itemData['menuItemId']);
+                $menuItem = MenuItem::findOrFail($itemData['menuItemId']);
                 $subtotal = $menuItem->price * $itemData['quantity'];
 
                 OrderItem::create([
@@ -184,10 +175,8 @@ class OrderController extends Controller
     #[Post("/orders/{orderId}/pay", "Marcar pedido como pagado", "Pedidos", true)]
     public function pay(Request $request, $id)
     {
-        $companyId = $request->user()->company_id;
-
-        return DB::transaction(function () use ($companyId, $id) {
-            $order = Order::where('company_id', $companyId)->findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $order = Order::findOrFail($id);
 
             if ($order->status === 'paid') {
                 return response()->json([

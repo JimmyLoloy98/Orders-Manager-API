@@ -12,7 +12,6 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'company_id',
         'dining_table_id',
         'status',
         'total_amount',
@@ -21,11 +20,6 @@ class Order extends Model
     protected $casts = [
         'total_amount' => 'float',
     ];
-
-    public function company(): BelongsTo
-    {
-        return $this->belongsTo(Company::class);
-    }
 
     public function diningTable(): BelongsTo
     {

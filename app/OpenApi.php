@@ -13,9 +13,10 @@ if (!defined('L5_SWAGGER_CONST_HOST')) {
     title: "Pedidos Panchito API",
 )]
 #[OA\Server(
-    url: L5_SWAGGER_CONST_HOST . "/api/v1",
+    url: L5_SWAGGER_CONST_HOST . "api/v1",
     description: "API Server"
 )]
+
 
 #[OA\SecurityScheme(
     securityScheme: "bearerAuth",
