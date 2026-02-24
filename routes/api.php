@@ -22,9 +22,24 @@ Route::prefix('v1')->group(function () {
         Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
         Route::get('/dashboard/recent-activity', [DashboardController::class, 'recentActivity']);
         Route::get('/dashboard/monthly-overview', [DashboardController::class, 'monthlyOverview']);
-        Route::get('/dashboard/scrap-collection', [DashboardController::class, 'scrapCollection']);
 
-        // Clients
-        Route::get('/clients', [ClientController::class, 'index']);
+        // Tables
+        Route::get('/tables', [\App\Http\Controllers\Api\DiningTableController::class, 'index']);
+        Route::get('/tables/{tableId}', [\App\Http\Controllers\Api\DiningTableController::class, 'show']);
+        Route::post('/tables', [\App\Http\Controllers\Api\DiningTableController::class, 'store']);
+
+        // Orders
+        Route::post('/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']);
+        Route::get('/tables/{tableId}/orders', [\App\Http\Controllers\Api\OrderController::class, 'indexByTable']);
+        Route::get('/orders/{orderId}', [\App\Http\Controllers\Api\OrderController::class, 'show']);
+        Route::put('/orders/{orderId}', [\App\Http\Controllers\Api\OrderController::class, 'update']);
+        Route::post('/orders/{orderId}/pay', [\App\Http\Controllers\Api\OrderController::class, 'pay']);
+
+        // Menu
+        Route::get('/menu/items', [\App\Http\Controllers\Api\MenuController::class, 'index']);
+        Route::post('/menu/items', [\App\Http\Controllers\Api\MenuController::class, 'store']);
+        Route::put('/menu/items/{itemId}', [\App\Http\Controllers\Api\MenuController::class, 'update']);
+        Route::get('/menu/categories', [\App\Http\Controllers\Api\MenuController::class, 'categories']);
+        Route::post('/menu/categories', [\App\Http\Controllers\Api\MenuController::class, 'storeCategory']);
     });
 });

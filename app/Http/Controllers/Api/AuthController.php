@@ -33,7 +33,6 @@ class AuthController extends Controller
             ]);
 
             $user = User::where('username', $request->username)
-                ->with('company')
                 ->first();
 
             if (! $user || ! Hash::check($request->password, $user->password)) {
@@ -49,12 +48,6 @@ class AuthController extends Controller
                     'id' => $user->id,
                     'username' => $user->username,
                     'name' => $user->name,
-                    'companyId' => $user->company_id,
-                    'company' => $user->company ? [
-                        'id' => $user->company->id,
-                        'name' => $user->company->name,
-                        'createdAt' => $user->company->created_at->toISOString(),
-                    ] : null,
                     'avatar' => $user->avatar,
                 ],
                 'token' => $token,

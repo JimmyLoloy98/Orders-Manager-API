@@ -7,18 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Client extends Model
+class Order extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'company_id',
-        'username',
-        'current_debt',
+        'dining_table_id',
+        'status',
+        'total_amount',
     ];
 
     protected $casts = [
-        'current_debt' => 'decimal:2',
+        'total_amount' => 'float',
     ];
 
     public function company(): BelongsTo
@@ -26,13 +27,13 @@ class Client extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function credits(): HasMany
+    public function diningTable(): BelongsTo
     {
-        return $this->hasMany(Credit::class);
+        return $this->belongsTo(DiningTable::class);
     }
 
-    public function payments(): HasMany
+    public function items(): HasMany
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasMany(OrderItem::class);
     }
 }

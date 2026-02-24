@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->foreign('company_id')
-                ->references('id')
-                ->on('companies')
-                ->nullOnDelete();
+        Schema::create('dining_tables', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->enum('status', ['free', 'busy'])->default('free');
+            $table->timestamps();
         });
     }
 
@@ -24,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['company_id']);
-        });
+        Schema::dropIfExists('dining_tables');
     }
 };

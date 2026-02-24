@@ -6,21 +6,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Company extends Model
+class DiningTable extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'name',
+        'status',
     ];
 
-    public function users(): HasMany
+    public function orders(): HasMany
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(Order::class);
     }
 
-    public function clients(): HasMany
+    public function activeOrders(): HasMany
     {
-        return $this->hasMany(Client::class);
+        return $this->hasMany(Order::class)->where('status', 'pending');
     }
 }
