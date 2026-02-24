@@ -32,6 +32,11 @@ class DashboardController extends Controller
 
         $averageOrder = $totalOrders > 0 ? (float)$revenue / $totalOrders : 0;
 
+        $totalDishesSold = (int) OrderItem::whereHas('order', function ($query) use ($today) {
+                $query->whereDate('created_at', $today);
+            })
+            ->sum('quantity');
+
         $topDish = OrderItem::whereHas('order', function ($query) use ($today) {
                 $query->whereDate('created_at', $today);
             })
@@ -52,6 +57,7 @@ class DashboardController extends Controller
                     'name' => $topDish->menuItem->name,
                     'totalSold' => (int)$topDish->total_sold
                 ] : null,
+                'totalDishesSold' => $totalDishesSold,
             ]
         ]);
     }
@@ -122,6 +128,47 @@ class DashboardController extends Controller
                 'orderCount' => (int)($stat->orderCount ?? 0),
             ];
             $current->addMonth();
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+    #[Get("/dashboard/daily-overview", "Resumen diario para gráficas (últimos 15 días)", "Dashboard", true, [
+        new OA\Parameter(name: "days", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 15)),
+    ])]
+    public function dailyOverview(Request $request)
+    {
+        $daysCount = $request->query('days', 15);
+        $startDate = Carbon::now()->subDays($daysCount - 1)->startOfDay();
+        $endDate = Carbon::now()->endOfDay();
+
+        $dailyStats = Order::where('status', 'paid')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw("DATE(created_at) as date"),
+                DB::raw('SUM(total_amount) as revenue'),
+                DB::raw('COUNT(*) as orderCount')
+            )
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $data = [];
+        $current = $startDate->copy();
+
+        while ($current->lte($endDate)) {
+            $dateKey = $current->toDateString();
+            $stat = $dailyStats->get($dateKey);
+
+            $data[] = [
+                'date' => $current->format('d/m'),
+                'fullDate' => $dateKey,
+                'revenue' => (float)($stat->revenue ?? 0),
+                'orderCount' => (int)($stat->orderCount ?? 0),
+            ];
+            $current->addDay();
         }
 
         return response()->json([

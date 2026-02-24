@@ -22,6 +22,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
         Route::get('/dashboard/recent-activity', [DashboardController::class, 'recentActivity']);
         Route::get('/dashboard/monthly-overview', [DashboardController::class, 'monthlyOverview']);
+        Route::get('/dashboard/daily-overview', [DashboardController::class, 'dailyOverview']);
+
 
         // Tables
         Route::get('/tables', [\App\Http\Controllers\Api\DiningTableController::class, 'index']);
