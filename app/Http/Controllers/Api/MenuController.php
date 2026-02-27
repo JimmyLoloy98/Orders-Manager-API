@@ -104,10 +104,10 @@ class MenuController extends Controller
         ]);
     }
 
-    #[Get("/menu/categories", "Listar categorías del menú", "Menú", true)]
+    #[Get("/menu/categories", "Listar categorías del menú con sus ítems", "Menú", true)]
     public function categories(Request $request)
     {
-        $categories = MenuCategory::all();
+        $categories = MenuCategory::with('items')->get();
 
         return response()->json([
             'success' => true,
