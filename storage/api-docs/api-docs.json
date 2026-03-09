@@ -475,7 +475,7 @@
                 "tags": [
                     "Menú"
                 ],
-                "summary": "Listar categorías del menú",
+                "summary": "Listar categorías del menú con sus ítems",
                 "operationId": "42daf2a80fe91ac314a97dbab1d683d4",
                 "responses": {
                     "200": {
