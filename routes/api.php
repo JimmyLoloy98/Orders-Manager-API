@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\DiningTableController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\MenuController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -26,22 +28,24 @@ Route::prefix('v1')->group(function () {
 
 
         // Tables
-        Route::get('/tables', [\App\Http\Controllers\Api\DiningTableController::class, 'index']);
-        Route::get('/tables/{tableId}', [\App\Http\Controllers\Api\DiningTableController::class, 'show']);
-        Route::post('/tables', [\App\Http\Controllers\Api\DiningTableController::class, 'store']);
+        Route::get('/tables', [DiningTableController::class, 'index']);
+        Route::put('/tables/{id}', [DiningTableController::class, 'update']);
+        Route::patch('/tables/{id}', [DiningTableController::class, 'update']);
+        Route::get('/tables/{id}', [DiningTableController::class, 'show']);
+        Route::post('/tables', [DiningTableController::class, 'store']);
 
         // Orders
-        Route::post('/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']);
-        Route::get('/tables/{tableId}/orders', [\App\Http\Controllers\Api\OrderController::class, 'indexByTable']);
-        Route::get('/orders/{orderId}', [\App\Http\Controllers\Api\OrderController::class, 'show']);
-        Route::put('/orders/{orderId}', [\App\Http\Controllers\Api\OrderController::class, 'update']);
-        Route::post('/orders/{orderId}/pay', [\App\Http\Controllers\Api\OrderController::class, 'pay']);
+        Route::get('/tables/{tableId}/orders', [OrderController::class, 'indexByTable']);
+        Route::post('/orders', [OrderController::class, 'store']);
+        Route::get('/orders/{orderId}', [OrderController::class, 'show']);
+        Route::put('/orders/{orderId}', [OrderController::class, 'update']);
+        Route::post('/orders/{orderId}/pay', [OrderController::class, 'pay']);
 
         // Menu
-        Route::get('/menu/items', [\App\Http\Controllers\Api\MenuController::class, 'index']);
-        Route::post('/menu/items', [\App\Http\Controllers\Api\MenuController::class, 'store']);
-        Route::put('/menu/items/{itemId}', [\App\Http\Controllers\Api\MenuController::class, 'update']);
-        Route::get('/menu/categories', [\App\Http\Controllers\Api\MenuController::class, 'categories']);
-        Route::post('/menu/categories', [\App\Http\Controllers\Api\MenuController::class, 'storeCategory']);
+        Route::get('/menu/items', [MenuController::class, 'index']);
+        Route::post('/menu/items', [MenuController::class, 'store']);
+        Route::put('/menu/items/{itemId}', [MenuController::class, 'update']);
+        Route::get('/menu/categories', [MenuController::class, 'categories']);
+        Route::post('/menu/categories', [MenuController::class, 'storeCategory']);
     });
 });

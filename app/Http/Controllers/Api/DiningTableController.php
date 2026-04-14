@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Attributes\OpenApi\Get;
 use App\Attributes\OpenApi\Post;
+use App\Attributes\OpenApi\Put;
 use App\Http\Controllers\Controller;
 use App\Models\DiningTable;
 use Illuminate\Http\Request;
@@ -126,5 +127,45 @@ class DiningTableController extends Controller
                 'status' => $table->status,
             ]
         ], 201);
+    }
+
+    #[Put("/tables/{tableId}", "Editar una mesa", "Mesas", true, new OA\RequestBody(
+        content: new OA\JsonContent(
+            required: ["name"],
+            properties: [
+                new OA\Property(property: "name", type: "string", example: "Mesa VIP")
+            ]
+        )
+    ), [], [
+        new OA\Parameter(name: "tableId", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+    ])]
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:50',
+        ]);
+
+        $table = DiningTable::find($id);
+
+        if (!$table) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mesa no encontrada'
+            ], 404);
+        }
+
+        $table->update([
+            'name' => $request->name,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mesa actualizada correctamente',
+            'data' => [
+                'id' => $table->id,
+                'name' => $table->name,
+                'status' => $table->status,
+            ]
+        ]);
     }
 }
