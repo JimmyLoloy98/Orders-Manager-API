@@ -42,6 +42,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/tables/{tableId}/orders', [OrderController::class, 'indexByTable']);
         Route::post('/orders', [OrderController::class, 'store']);
         Route::get('/orders/{orderId}', [OrderController::class, 'show']);
+        Route::get('/orders/{orderId}/last-update', [OrderController::class, 'lastUpdate']);
         Route::put('/orders/{orderId}', [OrderController::class, 'update']);
         Route::post('/orders/{orderId}/pay', [OrderController::class, 'pay']);
 

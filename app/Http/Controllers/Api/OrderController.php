@@ -10,6 +10,7 @@ use App\Models\DiningTable;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderUpdate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use OpenApi\Attributes as OA;
@@ -91,7 +92,18 @@ class OrderController extends Controller
         $orders = Order::where('dining_table_id', $table->id)
             ->with(['items.menuItem', 'user'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($order) {
+                $order->summary = $order->items->groupBy('menu_item_id')->map(function ($group) {
+                    return [
+                        'name' => $group->first()->menuItem->name,
+                        'quantity' => $group->sum('quantity'),
+                        'price' => $group->first()->price,
+                        'subtotal' => $group->sum('subtotal')
+                    ];
+                })->values();
+                return $order;
+            });
 
         return response()->json([
             'success' => true,
@@ -109,9 +121,21 @@ class OrderController extends Controller
     {
         $order = Order::with(['items.menuItem', 'user'])->findOrFail($id);
 
+        $summary = $order->items->groupBy('menu_item_id')->map(function ($group) {
+            return [
+                'name' => $group->first()->menuItem->name,
+                'quantity' => $group->sum('quantity'),
+                'price' => $group->first()->price,
+                'subtotal' => $group->sum('subtotal')
+            ];
+        })->values();
+
         return response()->json([
             'success' => true,
-            'data' => $order
+            'data' => [
+                'order' => $order,
+                'summary' => $summary
+            ]
         ]);
     }
 
@@ -182,6 +206,17 @@ class OrderController extends Controller
 
             $order->update(['total_amount' => $totalAmount]);
 
+            // Save only this update (overwriting previous one)
+            OrderUpdate::updateOrCreate(
+                [
+                    'order_id' => $order->id,
+                    'dining_table_id' => $order->dining_table_id
+                ],
+                [
+                    'items' => $newItems
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Pedido actualizado y agregados registrados',
@@ -191,6 +226,38 @@ class OrderController extends Controller
                 ]
             ]);
         });
+    }
+
+    #[Get("/orders/{orderId}/last-update", "Obtener la última actualización para imprimir", "Pedidos", true, [
+        new OA\Parameter(name: "orderId", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+    ], responses: [
+        new OA\Response(
+            response: 200,
+            description: "Última actualización recuperada",
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "success", type: "boolean"),
+                    new OA\Property(property: "data", type: "object")
+                ]
+            )
+        ),
+        new OA\Response(response: 404, description: "No hay actualizaciones recientes")
+    ])]
+    public function lastUpdate($orderId)
+    {
+        $update = OrderUpdate::where('order_id', $orderId)->first();
+
+        if (!$update) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay actualizaciones recientes para este pedido'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $update
+        ]);
     }
 
     #[Post("/orders/{orderId}/pay", "Marcar pedido como pagado", "Pedidos", true)]

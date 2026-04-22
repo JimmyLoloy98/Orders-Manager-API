@@ -824,6 +824,56 @@
                 ]
             }
         },
+        "/orders/{orderId}/last-update": {
+            "get": {
+                "tags": [
+                    "Pedidos"
+                ],
+                "summary": "Obtener la última actualización para imprimir",
+                "operationId": "69ffc6ceed0372d2aad4286123d1d5b1",
+                "parameters": [
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "200": {
+                        "description": "Última actualización recuperada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No hay actualizaciones recientes"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/orders/{orderId}/pay": {
             "post": {
                 "tags": [
