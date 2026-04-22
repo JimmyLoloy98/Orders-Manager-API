@@ -23,7 +23,24 @@ class AuthController extends Controller
                 new OA\Property(property: "password", type: "string", format: "password", example: "password"),
             ]
         )
-    ))]
+    ), responses: [
+        new OA\Response(
+            response: 200,
+            description: "Login exitoso",
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "user", properties: [
+                        new OA\Property(property: "id", type: "integer"),
+                        new OA\Property(property: "username", type: "string"),
+                        new OA\Property(property: "name", type: "string"),
+                        new OA\Property(property: "role", type: "string"),
+                        new OA\Property(property: "avatar", type: "string")
+                    ], type: "object"),
+                    new OA\Property(property: "token", type: "string")
+                ]
+            )
+        )
+    ])]
     public function login(Request $request)
     {
         try {
@@ -48,6 +65,7 @@ class AuthController extends Controller
                     'id' => $user->id,
                     'username' => $user->username,
                     'name' => $user->name,
+                    'role' => $user->role,
                     'avatar' => $user->avatar,
                 ],
                 'token' => $token,

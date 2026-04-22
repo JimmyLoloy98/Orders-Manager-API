@@ -21,15 +21,21 @@ class Post extends OA\Post
         array $responses = [],
         array $parameters = []
     ) {
-        $defaultResponses = [
-            new OA\Response(response: 201, description: "Recurso creado exitosamente"),
-        ];
+        $providedResponseCodes = array_map(fn($r) => $r->response, $responses);
 
-        if ($requiresAuth) {
+        $defaultResponses = [];
+        
+        if (!in_array(201, $providedResponseCodes)) {
+            $defaultResponses[] = new OA\Response(response: 201, description: "Recurso creado exitosamente");
+        }
+
+        if ($requiresAuth && !in_array(401, $providedResponseCodes)) {
             $defaultResponses[] = new OA\Response(response: 401, description: "No autenticado");
         }
 
-        $defaultResponses[] = new OA\Response(response: 422, description: "Error de validación");
+        if (!in_array(422, $providedResponseCodes)) {
+            $defaultResponses[] = new OA\Response(response: 422, description: "Error de validación");
+        }
 
         $responses = array_merge($defaultResponses, $responses);
 

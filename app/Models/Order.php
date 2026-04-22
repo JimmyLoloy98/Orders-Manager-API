@@ -13,6 +13,7 @@ class Order extends Model
 
     protected $fillable = [
         'dining_table_id',
+        'user_id',
         'status',
         'total_amount',
     ];
@@ -29,5 +30,10 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

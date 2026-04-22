@@ -22,11 +22,15 @@ class Get extends OA\Get
         array $parameters = [],
         array $responses = []
     ) {
-        $defaultResponses = [
-            new OA\Response(response: 200, description: "Operación exitosa"),
-        ];
+        $providedResponseCodes = array_map(fn($r) => $r->response, $responses);
 
-        if ($requiresAuth) {
+        $defaultResponses = [];
+        
+        if (!in_array(200, $providedResponseCodes)) {
+            $defaultResponses[] = new OA\Response(response: 200, description: "Operación exitosa");
+        }
+
+        if ($requiresAuth && !in_array(401, $providedResponseCodes)) {
             $defaultResponses[] = new OA\Response(response: 401, description: "No autenticado");
         }
 

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\DiningTableController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MenuController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,9 @@ Route::prefix('v1')->group(function () {
 
     // Protected routes (require authentication)
     Route::middleware('auth:sanctum')->group(function () {
+        // Users
+        Route::post('/users', [UserController::class, 'store']);
+
         // Auth
         Route::post('/auth/logout', [AuthController::class, 'logout']);
 

@@ -21,12 +21,19 @@ class Put extends OA\Put
         array $responses = [],
         array $parameters = []
     ) {
-        $defaultResponses = [
-            new OA\Response(response: 200, description: "Recurso actualizado exitosamente"),
-            new OA\Response(response: 404, description: "Recurso no encontrado"),
-        ];
+        $providedResponseCodes = array_map(fn($r) => $r->response, $responses);
 
-        if ($requiresAuth) {
+        $defaultResponses = [];
+        
+        if (!in_array(200, $providedResponseCodes)) {
+            $defaultResponses[] = new OA\Response(response: 200, description: "Recurso actualizado exitosamente");
+        }
+
+        if (!in_array(404, $providedResponseCodes)) {
+            $defaultResponses[] = new OA\Response(response: 404, description: "Recurso no encontrado");
+        }
+
+        if ($requiresAuth && !in_array(401, $providedResponseCodes)) {
             $defaultResponses[] = new OA\Response(response: 401, description: "No autenticado");
         }
 

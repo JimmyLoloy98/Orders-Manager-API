@@ -44,6 +44,7 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'dining_table_id' => $table->id,
+                'user_id' => $request->user()->id,
                 'status' => 'pending',
                 'total_amount' => 0,
             ]);
@@ -88,7 +89,7 @@ class OrderController extends Controller
         $table = DiningTable::findOrFail($tableId);
 
         $orders = Order::where('dining_table_id', $table->id)
-            ->with('items.menuItem')
+            ->with(['items.menuItem', 'user'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -106,7 +107,7 @@ class OrderController extends Controller
     ])]
     public function show(Request $request, $id)
     {
-        $order = Order::with('items.menuItem')->findOrFail($id);
+        $order = Order::with(['items.menuItem', 'user'])->findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -114,18 +115,34 @@ class OrderController extends Controller
         ]);
     }
 
-    #[Put("/orders/{orderId}", "Actualizar un pedido", "Pedidos", true, new OA\RequestBody(
+    #[Put("/orders/{orderId}", "Actualizar pedido existente", "Pedidos", true, new OA\RequestBody(
         content: new OA\JsonContent(
+            required: ["items"],
             properties: [
                 new OA\Property(property: "items", type: "array", items: new OA\Items(
                     properties: [
-                        new OA\Property(property: "menuItemId", type: "integer"),
-                        new OA\Property(property: "quantity", type: "integer")
+                        new OA\Property(property: "menuItemId", type: "integer", example: 1),
+                        new OA\Property(property: "quantity", type: "integer", example: 1)
                     ]
                 ))
             ]
         )
-    ))]
+    ), responses: [
+        new OA\Response(
+            response: 200,
+            description: "Pedido actualizado exitosamente",
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "success", type: "boolean"),
+                    new OA\Property(property: "message", type: "string"),
+                    new OA\Property(property: "data", properties: [
+                        new OA\Property(property: "order", type: "object"),
+                        new OA\Property(property: "addedItems", type: "array", items: new OA\Items(type: "object"))
+                    ], type: "object")
+                ]
+            )
+        )
+    ])]
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -144,15 +161,14 @@ class OrderController extends Controller
                 ], 400);
             }
 
-            // Remove old items and add new ones (Simplified logic)
-            $order->items()->delete();
+            $newItems = [];
+            $totalAmount = $order->total_amount;
 
-            $totalAmount = 0;
             foreach ($request->items as $itemData) {
                 $menuItem = MenuItem::findOrFail($itemData['menuItemId']);
                 $subtotal = $menuItem->price * $itemData['quantity'];
 
-                OrderItem::create([
+                $orderItem = OrderItem::create([
                     'order_id' => $order->id,
                     'menu_item_id' => $menuItem->id,
                     'quantity' => $itemData['quantity'],
@@ -161,13 +177,18 @@ class OrderController extends Controller
                 ]);
 
                 $totalAmount += $subtotal;
+                $newItems[] = $orderItem->load('menuItem');
             }
 
             $order->update(['total_amount' => $totalAmount]);
 
             return response()->json([
                 'success' => true,
-                'data' => $order->fresh('items.menuItem')
+                'message' => 'Pedido actualizado y agregados registrados',
+                'data' => [
+                    'order' => $order->fresh(['items.menuItem', 'user']),
+                    'addedItems' => $newItems
+                ]
             ]);
         });
     }
