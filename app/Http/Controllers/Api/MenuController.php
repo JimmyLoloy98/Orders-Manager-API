@@ -72,7 +72,7 @@ class MenuController extends Controller
             $file = $request->file('image');
             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
             $path = $file->storeAs('menu_items', $filename, 'public');
-            $imagePath = Storage::disk('public')->url($path);
+            $imagePath = asset('storage/' . $path);
         }
 
         $item = MenuItem::create([
@@ -94,17 +94,43 @@ class MenuController extends Controller
             properties: [
                 new OA\Property(property: "name", type: "string"),
                 new OA\Property(property: "price", type: "number", format: "float"),
+                new OA\Property(property: "categoryId", type: "integer"),
+                new OA\Property(property: "description", type: "string"),
             ]
         )
     ))]
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $item = MenuItem::findOrFail($id);
 
+        $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'price' => 'sometimes|numeric|min:0',
+            'categoryId' => 'sometimes|exists:menu_categories,id',
+            'description' => 'nullable|string',
+        ]);
+
+        if ($request->has('name')) {
+            $item->name = $request->name;
+        }
+
+        if ($request->has('price')) {
+            $item->price = $request->price;
+        }
+
+        if ($request->has('categoryId')) {
+            $item->menu_category_id = $request->categoryId;
+        }
+
+        if ($request->has('description')) {
+            $item->description = $request->description;
+        }
+
+        $item->save();
 
         return response()->json([
             'success' => true,
-            'data' => $item
+            'data' => $item->load('category')
         ]);
     }
 

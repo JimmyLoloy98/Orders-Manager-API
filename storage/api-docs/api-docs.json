@@ -531,6 +531,12 @@
                                     "price": {
                                         "type": "number",
                                         "format": "float"
+                                    },
+                                    "categoryId": {
+                                        "type": "integer"
+                                    },
+                                    "description": {
+                                        "type": "string"
                                     }
                                 },
                                 "type": "object"

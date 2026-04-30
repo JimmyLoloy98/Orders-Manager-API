@@ -50,6 +50,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/menu/items', [MenuController::class, 'index']);
         Route::post('/menu/items', [MenuController::class, 'store']);
         Route::put('/menu/items/{itemId}', [MenuController::class, 'update']);
+        Route::patch('/menu/items/{itemId}', [MenuController::class, 'update']);
         Route::get('/menu/categories', [MenuController::class, 'categories']);
         Route::post('/menu/categories', [MenuController::class, 'storeCategory']);
     });
