@@ -522,7 +522,7 @@
                 "operationId": "6749d51b20185fdf2c0d5b1704d1b810",
                 "requestBody": {
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
                                     "name": {
@@ -537,6 +537,14 @@
                                     },
                                     "description": {
                                         "type": "string"
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "_method": {
+                                        "type": "string",
+                                        "default": "PUT"
                                     }
                                 },
                                 "type": "object"

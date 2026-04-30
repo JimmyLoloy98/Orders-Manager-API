@@ -90,13 +90,18 @@ class MenuController extends Controller
     }
 
     #[Put("/menu/items/{itemId}", "Actualizar item del menú", "Menú", true, new OA\RequestBody(
-        content: new OA\JsonContent(
-            properties: [
-                new OA\Property(property: "name", type: "string"),
-                new OA\Property(property: "price", type: "number", format: "float"),
-                new OA\Property(property: "categoryId", type: "integer"),
-                new OA\Property(property: "description", type: "string"),
-            ]
+        content: new OA\MediaType(
+            mediaType: "multipart/form-data",
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: "name", type: "string"),
+                    new OA\Property(property: "price", type: "number", format: "float"),
+                    new OA\Property(property: "categoryId", type: "integer"),
+                    new OA\Property(property: "description", type: "string"),
+                    new OA\Property(property: "image", type: "string", format: "binary"),
+                    new OA\Property(property: "_method", type: "string", default: "PUT"),
+                ]
+            )
         )
     ))]
     public function update(Request $request, int $id)
@@ -108,6 +113,7 @@ class MenuController extends Controller
             'price' => 'sometimes|numeric|min:0',
             'categoryId' => 'sometimes|exists:menu_categories,id',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         if ($request->has('name')) {
@@ -124,6 +130,13 @@ class MenuController extends Controller
 
         if ($request->has('description')) {
             $item->description = $request->description;
+        }
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('menu_items', $filename, 'public');
+            $item->image = asset('storage/' . $path);
         }
 
         $item->save();
