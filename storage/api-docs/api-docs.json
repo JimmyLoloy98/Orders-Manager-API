@@ -838,47 +838,22 @@
                 ]
             }
         },
-        "/orders/{orderId}/last-update": {
-            "get": {
+        "/orders/{orderId}/pay": {
+            "post": {
                 "tags": [
                     "Pedidos"
                 ],
-                "summary": "Obtener la última actualización para imprimir",
-                "operationId": "69ffc6ceed0372d2aad4286123d1d5b1",
-                "parameters": [
-                    {
-                        "name": "orderId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
+                "summary": "Marcar pedido como pagado",
+                "operationId": "71414da77d1d9c8b7ea764f344e1b6f9",
                 "responses": {
+                    "201": {
+                        "description": "Recurso creado exitosamente"
+                    },
                     "401": {
                         "description": "No autenticado"
                     },
-                    "200": {
-                        "description": "Última actualización recuperada",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean"
-                                        },
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "No hay actualizaciones recientes"
+                    "422": {
+                        "description": "Error de validación"
                     }
                 },
                 "security": [
@@ -888,13 +863,99 @@
                 ]
             }
         },
-        "/orders/{orderId}/pay": {
+        "/orders/{orderId}/aumento": {
             "post": {
                 "tags": [
                     "Pedidos"
                 ],
-                "summary": "Marcar pedido como pagado",
-                "operationId": "71414da77d1d9c8b7ea764f344e1b6f9",
+                "summary": "Aumentar ítems en un pedido (registra en order_additions)",
+                "operationId": "f94ee217ec7308d934d1d7c761ecb0ba",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "items"
+                                ],
+                                "properties": {
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "menuItemId": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "quantity": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Recurso creado exitosamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/orders/{orderId}/reduccion": {
+            "post": {
+                "tags": [
+                    "Pedidos"
+                ],
+                "summary": "Reducir cantidades de ítems en un pedido (actualiza order_items)",
+                "operationId": "d883cf5f89ef1f941c8e59d43d1b7902",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "items"
+                                ],
+                                "properties": {
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "menuItemId": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "quantity": {
+                                                    "description": "Nueva cantidad total deseada. Si es 0 o menor al mínimo se elimina el ítem.",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "201": {
                         "description": "Recurso creado exitosamente"
