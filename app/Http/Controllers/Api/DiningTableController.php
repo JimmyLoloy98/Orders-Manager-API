@@ -75,6 +75,7 @@ class DiningTableController extends Controller
         $currentOrders = $table->activeOrders->map(function ($order) {
             return [
                 'id' => $order->id,
+                'nombre_mozo' => $order->nombre_mozo,
                 'items' => $order->items->map(function ($item) {
                     return [
                         'name' => $item->menuItem->name,

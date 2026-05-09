@@ -115,6 +115,43 @@
                 ]
             }
         },
+        "/mozo/confirm-nombre": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Confirmar nombre de mozo y crear sesión temporal",
+                "operationId": "27d08af8ea066b024cfd2c89a635807e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre_mozo"
+                                ],
+                                "properties": {
+                                    "nombre_mozo": {
+                                        "type": "string",
+                                        "example": "Carlos"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Recurso creado exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": []
+            }
+        },
         "/dashboard/stats": {
             "get": {
                 "tags": [
@@ -667,6 +704,11 @@
                                             },
                                             "type": "object"
                                         }
+                                    },
+                                    "nombre_mozo": {
+                                        "description": "Nombre del mozo temporal",
+                                        "type": "string",
+                                        "example": "Carlos"
                                     }
                                 },
                                 "type": "object"
@@ -706,6 +748,38 @@
                         "required": true,
                         "schema": {
                             "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mozo/{nombreMozo}/orders": {
+            "get": {
+                "tags": [
+                    "Pedidos"
+                ],
+                "summary": "Listar pedidos activos de un mozo específico",
+                "operationId": "dfa5f36fd2947533a26f4c5e52a6c4cd",
+                "parameters": [
+                    {
+                        "name": "nombreMozo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],

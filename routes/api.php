@@ -23,6 +23,7 @@ Route::prefix('v1')->group(function () {
 
         // Auth
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::post('/mozo/confirm-nombre', [AuthController::class, 'confirmMozoNombre']);
 
         // Dashboard
         Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
@@ -40,6 +41,7 @@ Route::prefix('v1')->group(function () {
 
         // Orders
         Route::get('/tables/{tableId}/orders', [OrderController::class, 'indexByTable']);
+        Route::get('/mozo/{nombreMozo}/orders', [OrderController::class, 'mozoOrders']);
         Route::post('/orders', [OrderController::class, 'store']);
         Route::get('/orders/{orderId}', [OrderController::class, 'show']);
         Route::put('/orders/{orderId}', [OrderController::class, 'update']);

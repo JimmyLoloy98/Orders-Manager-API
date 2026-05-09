@@ -14,6 +14,7 @@ class Order extends Model
     protected $fillable = [
         'dining_table_id',
         'user_id',
+        'nombre_mozo',
         'status',
         'total_amount',
     ];

@@ -95,4 +95,42 @@ class AuthController extends Controller
             'message' => 'Logged out successfully',
         ]);
     }
+
+    #[Post("/mozo/confirm-nombre", "Confirmar nombre de mozo y crear sesión temporal", "Authentication", false, new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["nombre_mozo"],
+            properties: [
+                new OA\Property(property: "nombre_mozo", type: "string", example: "Carlos"),
+            ]
+        )
+    ))]
+    public function confirmMozoNombre(Request $request)
+    {
+        $request->validate([
+            'nombre_mozo' => 'required|string',
+        ]);
+
+        $user = $request->user();
+
+        if ($user->role !== 'mozo') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $sessionDate = now()->toDateString();
+        $sessionToken = \Illuminate\Support\Str::random(60);
+
+        $mozoSession = \App\Models\MozoSession::updateOrCreate(
+            ['user_id' => $user->id, 'session_date' => $sessionDate],
+            ['nombre_mozo' => $request->nombre_mozo, 'session_token' => $sessionToken]
+        );
+
+        return response()->json([
+            'userId' => $mozoSession->user_id,
+            'role' => $user->role,
+            'nombreMozo' => $mozoSession->nombre_mozo,
+            'sessionDate' => $mozoSession->session_date,
+            'sessionToken' => $mozoSession->session_token,
+        ], 200);
+    }
 }

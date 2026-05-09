@@ -27,7 +27,8 @@ class OrderController extends Controller
                         new OA\Property(property: "menuItemId", type: "integer", example: 1),
                         new OA\Property(property: "quantity", type: "integer", example: 2)
                     ]
-                ))
+                )),
+                new OA\Property(property: "nombre_mozo", type: "string", example: "Carlos", description: "Nombre del mozo temporal")
             ]
         )
     ))]
@@ -38,6 +39,7 @@ class OrderController extends Controller
             'items' => 'required|array|min:1',
             'items.*.menuItemId' => 'required|exists:menu_items,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'nombre_mozo' => 'nullable|string',
         ]);
 
         return DB::transaction(function () use ($request) {
@@ -46,6 +48,7 @@ class OrderController extends Controller
             $order = Order::create([
                 'dining_table_id' => $table->id,
                 'user_id' => $request->user()->id,
+                'nombre_mozo' => $request->input('nombre_mozo'),
                 'status' => 'pending',
                 'total_amount' => 0,
             ]);
@@ -75,6 +78,7 @@ class OrderController extends Controller
                 'data' => [
                     'id' => $order->id,
                     'tableId' => $table->id,
+                    'nombre_mozo' => $order->nombre_mozo,
                     'totalAmount' => (float)$totalAmount,
                     'createdAt' => $order->created_at->toISOString(),
                 ]
@@ -109,6 +113,37 @@ class OrderController extends Controller
             'success' => true,
             'data' => [
                 'tableId' => $table->id,
+                'orders' => $orders
+            ]
+        ]);
+    }
+
+    #[Get("/mozo/{nombreMozo}/orders", "Listar pedidos activos de un mozo específico", "Pedidos", true, [
+        new OA\Parameter(name: "nombreMozo", in: "path", required: true, schema: new OA\Schema(type: "string"))
+    ])]
+    public function mozoOrders(Request $request, $nombreMozo)
+    {
+        $orders = Order::where('nombre_mozo', $nombreMozo)
+            ->where('status', 'pending')
+            ->with(['items.menuItem', 'diningTable'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($order) {
+                $order->summary = $order->items->groupBy('menu_item_id')->map(function ($group) {
+                    return [
+                        'name' => $group->first()->menuItem->name,
+                        'quantity' => $group->sum('quantity'),
+                        'price' => $group->first()->price,
+                        'subtotal' => $group->sum('subtotal')
+                    ];
+                })->values();
+                return $order;
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'nombre_mozo' => $nombreMozo,
                 'orders' => $orders
             ]
         ]);
