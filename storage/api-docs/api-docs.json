@@ -798,6 +798,98 @@
                 ]
             }
         },
+        "/orders/history": {
+            "get": {
+                "tags": [
+                    "Pedidos"
+                ],
+                "summary": "Listar historial de pedidos con filtros",
+                "operationId": "101ce41e37cbbbe24a9c1bd55bfe1244",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Filtrar por fecha exacta (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/orders/{orderId}/print": {
+            "get": {
+                "tags": [
+                    "Pedidos"
+                ],
+                "summary": "Obtener ticket de impresión de un pedido",
+                "operationId": "0c3dbde1373baa0cc0264d41579f1870",
+                "parameters": [
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/orders/{orderId}": {
             "get": {
                 "tags": [

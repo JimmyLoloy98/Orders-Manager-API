@@ -149,11 +149,100 @@ class OrderController extends Controller
         ]);
     }
 
+    #[Get("/orders/history", "Listar historial de pedidos con filtros", "Pedidos", true, [
+        new OA\Parameter(name: "date", in: "query", required: false, schema: new OA\Schema(type: "string", format: "date"), description: "Filtrar por fecha exacta (YYYY-MM-DD)"),
+        new OA\Parameter(name: "start_date", in: "query", required: false, schema: new OA\Schema(type: "string", format: "date")),
+        new OA\Parameter(name: "end_date", in: "query", required: false, schema: new OA\Schema(type: "string", format: "date")),
+        new OA\Parameter(name: "user_id", in: "query", required: false, schema: new OA\Schema(type: "integer"))
+    ])]
+    public function history(Request $request)
+    {
+        $request->validate([
+            'date'       => 'nullable|date_format:Y-m-d',
+            'start_date' => 'nullable|date_format:Y-m-d',
+            'end_date'   => 'nullable|date_format:Y-m-d|after_or_equal:start_date',
+            'user_id'    => 'nullable|integer|exists:users,id',
+        ]);
+
+        $query = Order::with(['diningTable', 'user', 'items'])
+            ->orderBy('created_at', 'desc');
+
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
+        } else {
+            if ($request->filled('start_date')) {
+                $query->whereDate('created_at', '>=', $request->start_date);
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('created_at', '<=', $request->end_date);
+            }
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        $orders = $query->get()->map(function ($order) {
+            return [
+                'id'               => $order->id,
+                'fecha_hora'       => $order->created_at->format('Y-m-d H:i:s'),
+                'mesa'             => $order->diningTable?->name,
+                'mozo'             => $order->nombre_mozo ?? $order->user?->name,
+                'cantidad_pedidos' => $order->items->sum('quantity'),
+                'items_count'      => $order->items->groupBy('menu_item_id')->count(),
+                'monto'            => (float) $order->total_amount,
+                'status'           => $order->status,
+                'print_url'        => "/api/v1/orders/{$order->id}/print",
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data'    => ['orders' => $orders],
+        ]);
+    }
+
+    #[Get("/orders/{orderId}/print", "Obtener ticket de impresión de un pedido", "Pedidos", true, [
+        new OA\Parameter(name: "orderId", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+    ])]
+    public function printTicket(Request $request, $id)
+    {
+
+        /** @var Order $order */
+        $order = Order::with(['items.menuItem', 'diningTable', 'user'])->findOrFail($id);
+
+        $items = $order->items->groupBy('menu_item_id')->map(function ($group) {
+            return [
+                'name'     => $group->first()->menuItem->name,
+                'quantity' => $group->sum('quantity'),
+                'price'    => (float) $group->first()->price,
+                'subtotal' => (float) $group->sum('subtotal'),
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'ticket' => [
+                    'order_id'   => $order->id,
+                    'fecha_hora' => $order->created_at->format('Y-m-d H:i:s'),
+                    'mesa'       => $order->diningTable?->name,
+                    'mozo'       => $order->nombre_mozo ?? $order->user?->name,
+                    'status'     => $order->status,
+                    'items'      => $items,
+                    'total'      => (float) $order->total_amount,
+                ],
+            ],
+        ]);
+    }
+
     #[Get("/orders/{orderId}", "Obtener detalles de un pedido", "Pedidos", true, [
         new OA\Parameter(name: "orderId", in: "path", required: true, schema: new OA\Schema(type: "integer"))
     ])]
     public function show(Request $request, $id)
     {
+
+        /** @var Order $order */
         $order = Order::with(['items.menuItem', 'user'])->findOrFail($id);
 
         $summary = $order->items->groupBy('menu_item_id')->map(function ($group) {
