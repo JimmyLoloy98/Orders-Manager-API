@@ -15,26 +15,35 @@ use OpenApi\Attributes as OA;
 class MenuController extends Controller
 {
     #[Get("/menu/items", "Listar items del menú", "Menú", true, [
+        new OA\Parameter(name: "categoryId", in: "query", required: false, schema: new OA\Schema(type: "integer"), description: "Filtrar por ID de categoría"),
         new OA\Parameter(name: "category", in: "query", required: false, schema: new OA\Schema(type: "string"), description: "Filtrar por nombre de categoría"),
-        new OA\Parameter(name: "search", in: "query", required: false, schema: new OA\Schema(type: "string"), description: "Búsqueda por nombre"),
+        new OA\Parameter(name: "search", in: "query", required: false, schema: new OA\Schema(type: "string"), description: "Búsqueda por nombre o descripción"),
     ])]
     public function index(Request $request)
     {
-        $category = $request->query('category');
-        $search = $request->query('search');
+        $request->validate([
+            'categoryId' => 'nullable|integer|exists:menu_categories,id',
+            'category'   => 'nullable|string',
+            'search'     => 'nullable|string|max:100',
+        ]);
 
-        $query = MenuItem::with('category');
+        $query = MenuItem::with('category')->orderBy('name', 'asc');
 
-        if ($category) {
-            $query->whereHas('category', function ($q) use ($category) {
-                $q->where('name', 'like', "%$category%");
+        if ($request->filled('categoryId')) {
+            $query->where('menu_category_id', $request->categoryId);
+        } elseif ($request->filled('category')) {
+            $query->whereHas('category', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->category . '%');
             });
         }
 
-        if ($search) {
-            $query->where('name', 'like', "%$search%");
+        if ($request->filled('search')) {
+            $term = $request->search;
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', "%$term%")
+                  ->orWhere('description', 'like', "%$term%");
+            });
         }
-
 
         return response()->json([
             'success' => true,

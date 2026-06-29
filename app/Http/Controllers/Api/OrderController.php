@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Attributes\OpenApi\Delete;
 use App\Attributes\OpenApi\Get;
 use App\Attributes\OpenApi\Post;
 use App\Attributes\OpenApi\Put;
@@ -25,7 +26,8 @@ class OrderController extends Controller
                 new OA\Property(property: "items", type: "array", items: new OA\Items(
                     properties: [
                         new OA\Property(property: "menuItemId", type: "integer", example: 1),
-                        new OA\Property(property: "quantity", type: "integer", example: 2)
+                        new OA\Property(property: "quantity", type: "integer", example: 2),
+                        new OA\Property(property: "note", type: "string", example: "Sin cebolla", description: "Nota o indicación especial para este ítem")
                     ]
                 )),
                 new OA\Property(property: "nombre_mozo", type: "string", example: "Carlos", description: "Nombre del mozo temporal")
@@ -39,6 +41,7 @@ class OrderController extends Controller
             'items' => 'required|array|min:1',
             'items.*.menuItemId' => 'required|exists:menu_items,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.note' => 'nullable|string|max:255',
             'nombre_mozo' => 'nullable|string',
         ]);
 
@@ -65,6 +68,7 @@ class OrderController extends Controller
                     'quantity' => $itemData['quantity'],
                     'price' => $menuItem->price,
                     'subtotal' => $subtotal,
+                    'note' => $itemData['note'] ?? null,
                 ]);
 
                 $totalAmount += $subtotal;
@@ -99,11 +103,13 @@ class OrderController extends Controller
             ->get()
             ->map(function ($order) {
                 $order->summary = $order->items->groupBy('menu_item_id')->map(function ($group) {
+                    $notes = $group->pluck('note')->filter()->unique()->values()->implode(', ');
                     return [
-                        'name' => $group->first()->menuItem->name,
+                        'name'     => $group->first()->menuItem->name,
                         'quantity' => $group->sum('quantity'),
-                        'price' => $group->first()->price,
-                        'subtotal' => $group->sum('subtotal')
+                        'price'    => $group->first()->price,
+                        'subtotal' => $group->sum('subtotal'),
+                        'note'     => $notes ?: null,
                     ];
                 })->values();
                 return $order;
@@ -130,11 +136,13 @@ class OrderController extends Controller
             ->get()
             ->map(function ($order) {
                 $order->summary = $order->items->groupBy('menu_item_id')->map(function ($group) {
+                    $notes = $group->pluck('note')->filter()->unique()->values()->implode(', ');
                     return [
-                        'name' => $group->first()->menuItem->name,
+                        'name'     => $group->first()->menuItem->name,
                         'quantity' => $group->sum('quantity'),
-                        'price' => $group->first()->price,
-                        'subtotal' => $group->sum('subtotal')
+                        'price'    => $group->first()->price,
+                        'subtotal' => $group->sum('subtotal'),
+                        'note'     => $notes ?: null,
                     ];
                 })->values();
                 return $order;
@@ -212,11 +220,13 @@ class OrderController extends Controller
         $order = Order::with(['items.menuItem', 'diningTable', 'user'])->findOrFail($id);
 
         $items = $order->items->groupBy('menu_item_id')->map(function ($group) {
+            $notes = $group->pluck('note')->filter()->unique()->values()->implode(', ');
             return [
                 'name'     => $group->first()->menuItem->name,
                 'quantity' => $group->sum('quantity'),
                 'price'    => (float) $group->first()->price,
                 'subtotal' => (float) $group->sum('subtotal'),
+                'note'     => $notes ?: null,
             ];
         })->values();
 
@@ -246,11 +256,13 @@ class OrderController extends Controller
         $order = Order::with(['items.menuItem', 'user'])->findOrFail($id);
 
         $summary = $order->items->groupBy('menu_item_id')->map(function ($group) {
+            $notes = $group->pluck('note')->filter()->unique()->values()->implode(', ');
             return [
-                'name' => $group->first()->menuItem->name,
+                'name'     => $group->first()->menuItem->name,
                 'quantity' => $group->sum('quantity'),
-                'price' => $group->first()->price,
-                'subtotal' => $group->sum('subtotal')
+                'price'    => $group->first()->price,
+                'subtotal' => $group->sum('subtotal'),
+                'note'     => $notes ?: null,
             ];
         })->values();
 
@@ -381,7 +393,8 @@ class OrderController extends Controller
                 new OA\Property(property: "items", type: "array", items: new OA\Items(
                     properties: [
                         new OA\Property(property: "menuItemId", type: "integer", example: 1),
-                        new OA\Property(property: "quantity", type: "integer", example: 2)
+                        new OA\Property(property: "quantity", type: "integer", example: 2),
+                        new OA\Property(property: "note", type: "string", example: "Sin cebolla", description: "Nota o indicación especial para este ítem")
                     ]
                 ))
             ]
@@ -393,6 +406,7 @@ class OrderController extends Controller
             'items'                => 'required|array|min:1',
             'items.*.menuItemId'   => 'required|exists:menu_items,id',
             'items.*.quantity'     => 'required|integer|min:1',
+            'items.*.note'         => 'nullable|string|max:255',
         ]);
 
         return DB::transaction(function () use ($request, $id) {
@@ -418,6 +432,7 @@ class OrderController extends Controller
                     'quantity'     => $itemData['quantity'],
                     'price'        => $menuItem->price,
                     'subtotal'     => $subtotal,
+                    'note'         => $itemData['note'] ?? null,
                 ]);
 
                 $totalAmount += $subtotal;
@@ -440,6 +455,39 @@ class OrderController extends Controller
                     'order'      => $order->fresh(['items.menuItem', 'user']),
                     'addedItems' => $addedItems,
                 ]
+            ]);
+        });
+    }
+
+    #[Delete("/orders/{orderId}", "Eliminar pedido de una mesa", "Pedidos", true, [], [
+        new OA\Parameter(name: "orderId", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+    ])]
+    public function destroy(Request $request, $id)
+    {
+        return DB::transaction(function () use ($id) {
+            $order = Order::with('diningTable')->findOrFail($id);
+
+            if ($order->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se pueden eliminar pedidos en estado pendiente'
+                ], 400);
+            }
+
+            $table = $order->diningTable;
+            $order->delete();
+
+            $hasOtherPending = Order::where('dining_table_id', $table->id)
+                ->where('status', 'pending')
+                ->exists();
+
+            if (!$hasOtherPending) {
+                $table->update(['status' => 'free']);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pedido eliminado exitosamente'
             ]);
         });
     }
