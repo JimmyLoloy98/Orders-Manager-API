@@ -57,12 +57,13 @@ class OrderController extends Controller
             ]);
 
             $totalAmount = 0;
+            $createdItems = [];
 
             foreach ($request->items as $itemData) {
                 $menuItem = MenuItem::findOrFail($itemData['menuItemId']);
                 $subtotal = $menuItem->price * $itemData['quantity'];
 
-                OrderItem::create([
+                $orderItem = OrderItem::create([
                     'order_id' => $order->id,
                     'menu_item_id' => $menuItem->id,
                     'quantity' => $itemData['quantity'],
@@ -72,6 +73,14 @@ class OrderController extends Controller
                 ]);
 
                 $totalAmount += $subtotal;
+                $createdItems[] = [
+                    'menuItemId' => $menuItem->id,
+                    'name'       => $menuItem->name,
+                    'quantity'   => $orderItem->quantity,
+                    'price'      => (float) $orderItem->price,
+                    'subtotal'   => (float) $orderItem->subtotal,
+                    'note'       => $orderItem->note,
+                ];
             }
 
             $order->update(['total_amount' => $totalAmount]);
@@ -80,11 +89,12 @@ class OrderController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'id' => $order->id,
-                    'tableId' => $table->id,
+                    'id'          => $order->id,
+                    'tableId'     => $table->id,
                     'nombre_mozo' => $order->nombre_mozo,
-                    'totalAmount' => (float)$totalAmount,
-                    'createdAt' => $order->created_at->toISOString(),
+                    'totalAmount' => (float) $totalAmount,
+                    'items'       => $createdItems,
+                    'createdAt'   => $order->created_at->toISOString(),
                 ]
             ], 201);
         });
@@ -309,6 +319,7 @@ class OrderController extends Controller
             'items' => 'required|array|min:1',
             'items.*.menuItemId' => 'required|exists:menu_items,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.note' => 'nullable|string|max:255',
         ]);
 
         return DB::transaction(function () use ($request, $id) {
@@ -334,6 +345,7 @@ class OrderController extends Controller
                     'quantity' => $itemData['quantity'],
                     'price' => $menuItem->price,
                     'subtotal' => $subtotal,
+                    'note' => $itemData['note'] ?? null,
                 ]);
 
                 $totalAmount += $subtotal;
@@ -500,7 +512,9 @@ class OrderController extends Controller
                     properties: [
                         new OA\Property(property: "menuItemId", type: "integer", example: 1),
                         new OA\Property(property: "quantity",   type: "integer", example: 1,
-                            description: "Nueva cantidad total deseada. Si es 0 o menor al mínimo se elimina el ítem.")
+                            description: "Nueva cantidad total deseada. Si es 0 o menor al mínimo se elimina el ítem."),
+                        new OA\Property(property: "note", type: "string", example: "Sin cebolla",
+                            description: "Si se envía, reemplaza la nota existente. Si se omite, se conserva la nota original.")
                     ]
                 ))
             ]
@@ -512,6 +526,7 @@ class OrderController extends Controller
             'items'                => 'required|array|min:1',
             'items.*.menuItemId'   => 'required|exists:menu_items,id',
             'items.*.quantity'     => 'required|integer|min:0',
+            'items.*.note'         => 'nullable|string|max:255',
         ]);
 
         return DB::transaction(function () use ($request, $id) {
@@ -564,6 +579,10 @@ class OrderController extends Controller
                     $newSubtotal  = $menuItem->price * $newQuantity;
                     $totalAmount  = $totalAmount - $oldSubtotal + $newSubtotal;
 
+                    // Conservar la nota existente salvo que se envíe una nueva explícitamente
+                    $existingNote = $existingRows->pluck('note')->filter()->unique()->implode(', ') ?: null;
+                    $note = array_key_exists('note', $itemData) ? $itemData['note'] : $existingNote;
+
                     OrderItem::where('order_id', $order->id)
                         ->where('menu_item_id', $menuItemId)
                         ->delete();
@@ -574,6 +593,7 @@ class OrderController extends Controller
                         'quantity'     => $newQuantity,
                         'price'        => $menuItem->price,
                         'subtotal'     => $newSubtotal,
+                        'note'         => $note,
                     ]);
 
                     $reducedItems[] = [
