@@ -82,6 +82,7 @@ class DiningTableController extends Controller
                         'quantity' => $item->quantity,
                         'pricePerUnit' => (float)$item->price,
                         'subtotal' => (float)$item->subtotal,
+                        'note' => $item->note,
                     ];
                 }),
                 'totalAmount' => (float)$order->total_amount,

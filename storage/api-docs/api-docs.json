@@ -461,6 +461,15 @@
                 "operationId": "287ae0e2cb2005ce026340aafedbe685",
                 "parameters": [
                     {
+                        "name": "categoryId",
+                        "in": "query",
+                        "description": "Filtrar por ID de categoría",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "category",
                         "in": "query",
                         "description": "Filtrar por nombre de categoría",
@@ -472,7 +481,7 @@
                     {
                         "name": "search",
                         "in": "query",
-                        "description": "Búsqueda por nombre",
+                        "description": "Búsqueda por nombre o descripción",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -700,6 +709,11 @@
                                                 "quantity": {
                                                     "type": "integer",
                                                     "example": 2
+                                                },
+                                                "note": {
+                                                    "description": "Nota o indicación especial para este ítem",
+                                                    "type": "string",
+                                                    "example": "Sin cebolla"
                                                 }
                                             },
                                             "type": "object"
@@ -1002,6 +1016,39 @@
                         "bearerAuth": []
                     }
                 ]
+            },
+            "delete": {
+                "tags": [
+                    "Pedidos"
+                ],
+                "summary": "Eliminar pedido de una mesa",
+                "operationId": "2bcdcb74538ca99bd7aa1746e58fb8e5",
+                "parameters": [
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recurso eliminado exitosamente"
+                    },
+                    "404": {
+                        "description": "Recurso no encontrado"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/orders/{orderId}/pay": {
@@ -1055,6 +1102,11 @@
                                                 "quantity": {
                                                     "type": "integer",
                                                     "example": 2
+                                                },
+                                                "note": {
+                                                    "description": "Nota o indicación especial para este ítem",
+                                                    "type": "string",
+                                                    "example": "Sin cebolla"
                                                 }
                                             },
                                             "type": "object"

@@ -50,6 +50,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/orders/{orderId}/pay', [OrderController::class, 'pay']);
         Route::post('/orders/{orderId}/aumento', [OrderController::class, 'aumento']);
         Route::post('/orders/{orderId}/reduccion', [OrderController::class, 'reduccion']);
+        Route::delete('/orders/{orderId}', [OrderController::class, 'destroy']);
 
         // Menu
         Route::get('/menu/items', [MenuController::class, 'index']);
