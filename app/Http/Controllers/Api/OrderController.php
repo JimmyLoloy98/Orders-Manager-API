@@ -165,16 +165,17 @@ class OrderController extends Controller
         ]);
 
         $query = Order::with(['diningTable', 'user', 'items'])
-            ->orderBy('created_at', 'desc');
+            ->where('status', 'paid')
+            ->orderBy(DB::raw('COALESCE(paid_at, updated_at, created_at)'), 'desc');
 
         if ($request->filled('date')) {
-            $query->whereDate('created_at', $request->date);
+            $query->whereDate(DB::raw('COALESCE(paid_at, updated_at, created_at)'), $request->date);
         } else {
             if ($request->filled('start_date')) {
-                $query->whereDate('created_at', '>=', $request->start_date);
+                $query->whereDate(DB::raw('COALESCE(paid_at, updated_at, created_at)'), '>=', $request->start_date);
             }
             if ($request->filled('end_date')) {
-                $query->whereDate('created_at', '<=', $request->end_date);
+                $query->whereDate(DB::raw('COALESCE(paid_at, updated_at, created_at)'), '<=', $request->end_date);
             }
         }
 
@@ -185,7 +186,7 @@ class OrderController extends Controller
         $orders = $query->get()->map(function ($order) {
             return [
                 'id'               => $order->id,
-                'fecha_hora'       => $order->created_at->format('Y-m-d H:i:s'),
+                'fecha_hora'       => ($order->paid_at ?? $order->created_at)->toIso8601String(),
                 'mesa'             => $order->diningTable?->name,
                 'mozo'             => $order->nombre_mozo ?? $order->user?->name,
                 'cantidad_pedidos' => $order->items->sum('quantity'),
@@ -355,7 +356,10 @@ class OrderController extends Controller
                 ], 400);
             }
 
-            $order->update(['status' => 'paid']);
+            $order->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
 
             // Check if there are other pending orders for the table
             $table = $order->diningTable;

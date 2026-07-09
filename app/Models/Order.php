@@ -17,10 +17,12 @@ class Order extends Model
         'nombre_mozo',
         'status',
         'total_amount',
+        'paid_at',
     ];
 
     protected $casts = [
         'total_amount' => 'float',
+        'paid_at' => 'datetime',
     ];
 
     public function diningTable(): BelongsTo
