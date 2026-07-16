@@ -474,6 +474,35 @@ class OrderController extends Controller
             ]);
         });
     }
+    #[Get("/orders/{orderId}/last-update", "Obtener último agregado para reimprimir", "Pedidos", true, [
+    new OA\Parameter(name: "orderId", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+    ])]
+    public function lastUpdate($id)
+    {
+        $addition = OrderAddition::where('order_id', $id)
+            ->latest()
+            ->first();
+
+        if (!$addition) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay agregados para reimprimir',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'order_id'   => $addition->order_id,
+                'items'      => $addition->items,
+                'updated_at' => $addition->updated_at,
+            ],
+        ]);
+    }
+
+
+
+
 
     #[Delete("/orders/{orderId}", "Eliminar pedido de una mesa", "Pedidos", true, [], [
         new OA\Parameter(name: "orderId", in: "path", required: true, schema: new OA\Schema(type: "integer"))
@@ -612,6 +641,25 @@ class OrderController extends Controller
             }
 
             $order->update(['total_amount' => $totalAmount]);
+
+            // Si el pedido quedó sin ítems, cancelarlo y liberar la mesa
+            $remainingCount = OrderItem::where('order_id', $order->id)->count();
+
+            if ($remainingCount === 0) {
+                $order->update([
+                    'status'       => 'cancelled',
+                    'total_amount' => 0,
+                ]);
+
+                $table = $order->diningTable;
+                $hasOtherPending = Order::where('dining_table_id', $table->id)
+                    ->where('status', 'pending')
+                    ->exists();
+
+                if (!$hasOtherPending) {
+                    $table->update(['status' => 'free']);
+                }
+            }
 
             return response()->json([
                 'success'      => true,

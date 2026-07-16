@@ -45,6 +45,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/orders', [OrderController::class, 'store']);
         Route::get('/orders/history', [OrderController::class, 'history']);
         Route::get('/orders/{orderId}/print', [OrderController::class, 'printTicket']);
+        Route::get('/orders/{orderId}/last-update', [OrderController::class, 'lastUpdate']);
         Route::get('/orders/{orderId}', [OrderController::class, 'show']);
         Route::put('/orders/{orderId}', [OrderController::class, 'update']);
         Route::post('/orders/{orderId}/pay', [OrderController::class, 'pay']);
