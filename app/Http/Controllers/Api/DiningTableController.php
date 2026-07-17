@@ -78,6 +78,7 @@ class DiningTableController extends Controller
                 'nombre_mozo' => $order->nombre_mozo,
                 'items' => $order->items->map(function ($item) {
                     return [
+                        'menuItemId' => $item->menu_item_id,
                         'name' => $item->menuItem->name,
                         'quantity' => $item->quantity,
                         'pricePerUnit' => (float)$item->price,

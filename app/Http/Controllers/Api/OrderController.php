@@ -573,6 +573,7 @@ class OrderController extends Controller
             }
 
             $reducedItems = [];
+            $noteUpdatedItems = [];
             $totalAmount  = $order->total_amount;
 
             foreach ($request->items as $itemData) {
@@ -636,11 +637,48 @@ class OrderController extends Controller
                         'previous'   => $currentQuantity,
                         'current'    => $newQuantity,
                     ];
+                } elseif ($newQuantity === $currentQuantity && array_key_exists('note', $itemData)) {
+                    // Solo cambió la nota: consolidar filas existentes y actualizar la nota
+                    $existingNote = $existingRows->pluck('note')->filter()->unique()->implode(', ') ?: null;
+                    $newNote = $itemData['note'];
+
+                    if ($newNote !== $existingNote) {
+                        OrderItem::where('order_id', $order->id)
+                            ->where('menu_item_id', $menuItemId)
+                            ->delete();
+
+                        $updatedItem = OrderItem::create([
+                            'order_id'     => $order->id,
+                            'menu_item_id' => $menuItemId,
+                            'quantity'     => $currentQuantity,
+                            'price'        => $menuItem->price,
+                            'subtotal'     => $menuItem->price * $currentQuantity,
+                            'note'         => $newNote,
+                        ]);
+
+                        $noteUpdatedItems[] = $updatedItem->load('menuItem');
+
+                        $reducedItems[] = [
+                            'menuItemId' => $menuItemId,
+                            'name'       => $menuItem->name,
+                            'action'     => 'note_updated',
+                            'previous'   => $existingNote,
+                            'current'    => $newNote,
+                        ];
+                    }
                 }
-                // Si newQuantity >= currentQuantity, no se hace reducción (se ignora)
             }
 
             $order->update(['total_amount' => $totalAmount]);
+
+            // Registrar actualizaciones de nota en order_additions (para impresión incremental)
+            if (!empty($noteUpdatedItems)) {
+                OrderAddition::create([
+                    'order_id'        => $order->id,
+                    'dining_table_id' => $order->dining_table_id,
+                    'items'           => $noteUpdatedItems,
+                ]);
+            }
 
             // Si el pedido quedó sin ítems, cancelarlo y liberar la mesa
             $remainingCount = OrderItem::where('order_id', $order->id)->count();
